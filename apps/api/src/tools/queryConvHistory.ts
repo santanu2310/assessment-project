@@ -1,11 +1,16 @@
+import { tool } from "ai";
 import { prisma } from "../lib/db";
 import { z } from "zod";
 
-const inputSchema = z.object({
+// Define the schema for the tool's parameters
+const parameters = z.object({
   conversationId: z.string().describe("The ID of the conversation to query."),
 });
 
-async function run({ conversationId }: z.infer<typeof inputSchema>) {
+// Define the function that will be executed
+async function execute({
+  conversationId,
+}: z.infer<typeof parameters>): Promise<string> {
   try {
     const messages = await prisma.message.findMany({
       where: {
@@ -34,11 +39,11 @@ async function run({ conversationId }: z.infer<typeof inputSchema>) {
   }
 }
 
-export const queryConversationHistoryTool = {
-  inputSchema: inputSchema,
-  run,
-  name: "queryConversationHistory",
+// Export the tool with the explicit definitions
+export const queryConversationHistoryTool = tool({
   description:
     "Queries the history of a conversation and returns the most recent messages.",
-};
+  parameters,
+  execute,
+});
 

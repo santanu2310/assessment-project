@@ -5,7 +5,7 @@ export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } =
     useChat({
       // Replace with your actual Hono endpoint
-      api: "http://localhost:3000/chat/messages",
+      api: "http://localhost:3000/chat/",
     });
 
   return (
