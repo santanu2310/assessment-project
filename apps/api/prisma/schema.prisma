@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Chat & Multi-Agent Persistence ---
+
+model Conversation {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+  // To handle "List user conversations" [cite: 41, 45]
+  userId    String?   
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  role           MessageRole  // 'user' or 'assistant'
+  content        String       @db.Text
+  
+  // To show AI reasoning/metadata as requested in bonus points [cite: 63]
+  reasoning      String?      @db.Text
+  
+  // Track which agent handled the message (Support, Order, Billing) [cite: 20]
+  agentType      AgentType?   
+  
+  createdAt      DateTime     @default(now())
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+  tool
+}
+
+enum AgentType {
+  ROUTER
+  SUPPORT
+  ORDER
+  BILLING
+}
+
+// --- Mock Business Data for Agent Tools ---
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerEmail String
+  status        OrderStatus @default(PENDING)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  items         String      // Simplified for mock data
+  trackingId    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  amount        Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(UNPAID)
+  dueDate       DateTime
+  customerEmail String
+  createdAt     DateTime      @default(now())
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  OVERDUE
+}
