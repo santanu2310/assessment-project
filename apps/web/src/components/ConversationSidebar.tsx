@@ -1,9 +1,11 @@
-import { MessageSquare } from "lucide-react";
+import type { UIMessage } from "ai";
+import { MessageSquare, Plus } from "lucide-react";
 
 export interface Conversation {
   id: string;
   title: string;
   avatar: string;
+  messages: UIMessage[];
   lastMessage: string;
   timestamp: string;
 }
@@ -12,30 +14,39 @@ interface ConversationSidebarProps {
   conversations: Conversation[];
   activeId?: string;
   onSelect: (id: string) => void;
+  onNewChat: () => void;
 }
 
 export const ConversationSidebar = ({
   conversations,
   activeId,
   onSelect,
+  onNewChat,
 }: ConversationSidebarProps) => {
   return (
     <div className="h-full flex flex-col bg-[#1e293b] border-r border-white/5">
       {/* Sidebar Header */}
       <div className="p-4 mb-4 border-b border-white/5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <MessageSquare className="text-purple-500" size={24} />
             Messages
           </h1>
+          <button
+            onClick={onNewChat}
+            className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors shadow-lg shadow-purple-900/20"
+            title="New Conversation"
+          >
+            <Plus size={20} />
+          </button>
         </div>
       </div>
 
       {/* Conversation List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {conversations.map((conv) => (
+        {conversations.map((conv, index) => (
           <button
-            key={conv.id}
+            key={conv.id || `temp-${index}`}
             onClick={() => onSelect(conv.id)}
             className={`w-full p-4 flex items-center gap-3 transition-all border-b border-white/5 group ${
               activeId === conv.id

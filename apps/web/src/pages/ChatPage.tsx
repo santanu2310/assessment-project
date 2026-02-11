@@ -7,52 +7,106 @@ import {
 } from "src/components/ConversationSidebar";
 import { EmptyState } from "src/components/EmptyState";
 import { client } from "src/lib/api";
+import type { UIMessage } from "ai";
 
 const ChatPage = () => {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const res = await client.api.chat.conversations.$get();
-        if (res.ok) {
-          const data = await res.json();
-          console.log(data);
-
-          // Transform API data to Sidebar Conversation format
-          const transformed: Conversation[] = data.map((conv: any) => ({
-            id: conv.id,
-            title: conv.title,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`,
-            lastMessage:
-              conv._count?.messages > 0
-                ? `${conv._count.messages} messages`
-                : "New Conversation",
-            timestamp: new Date(conv.updatedAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
+  const fetchConversations = async () => {
+    try {
+      const res = await client.api.chat.conversations.$get();
+      if (res.ok) {
+        const data = await res.json();
+        const getMessage = async (id: string) => {
+          const messages = await client.api.chat.conversations[":id"].$get({
+            param: {
+              id: id, // This must match the name in your route (:id)
+            },
+          });
+          const messageData = await messages.json();
+          const fetchedMessages: UIMessage = (messageData.messages || []).map(
+            (m: any) => ({
+              id: m.id,
+              role: m.role as "user" | "assistant",
+              parts: [{ type: "text", text: m.content }],
             }),
-          }));
+          );
+          return fetchedMessages;
+        };
 
-          setConversations(transformed);
-        }
-      } catch (error) {
-        console.error("Failed to fetch conversations:", error);
-      } finally {
-        setIsLoading(false);
+        // const transformed: Conversation[] = data.map((conv: any) => ({
+        //   id: conv.id,
+        //   title: `Session ${conv.id.slice(-4)}`,
+        //   avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`,
+        //   // messages: await getMessage(conv.id),
+        //   lastMessage:
+        //     conv._count?.messages > 0
+        //       ? `${conv._count.messages} messages`
+        //       : "New Conversation",
+        //   timestamp: new Date(conv.updatedAt).toLocaleTimeString([], {
+        //     hour: "2-digit",
+        //     minute: "2-digit",
+        //   }),
+        // }));
+        //
+        const transformed: Conversation[] = await Promise.all(
+          data.map(async (conv: any) => {
+            // 2. Fetch your messages here
+            const messages = await getMessage(conv.id);
+            console.log(messages);
+
+            return {
+              id: conv.id,
+              title: `Session ${conv.id.slice(-4)}`,
+              avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`,
+
+              // 3. Now you can assign the resolved data
+              oldMessages: messages,
+
+              lastMessage:
+                conv._count?.messages > 0
+                  ? `${conv._count.messages} messages`
+                  : "New Conversation",
+              timestamp: new Date(conv.updatedAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
+          }),
+        );
+
+        setConversations(transformed);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch conversations:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchConversations();
   }, []);
 
-  const activeConversation = conversations.find((c) => c.id === selectedId);
+  const handleNewChat = () => {
+    setSelectedId("new"); // Temporarily set to "new" to show chat window
+  };
+
+  const activeConversation =
+    selectedId === "new"
+      ? {
+          id: "new",
+          title: "New Conversation",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=new",
+          oldMessages: [],
+        }
+      : conversations.find((c) => c.id === selectedId);
 
   return (
     <div className="flex h-screen w-full bg-[#0f172a] overflow-hidden">
-      {/* Left Sidebar - 25-30% width */}
+      {/* Left Sidebar */}
       <aside className="w-[30%] min-w-[300px] max-w-[400px] h-full flex-shrink-0">
         {isLoading ? (
           <div className="h-full flex items-center justify-center bg-[#1e293b] border-r border-white/5">
@@ -63,15 +117,15 @@ const ChatPage = () => {
             conversations={conversations}
             activeId={selectedId}
             onSelect={setSelectedId}
+            onNewChat={handleNewChat}
           />
         )}
       </aside>
 
-      {/* Main Chat Area - 70% width */}
+      {/* Main Chat Area */}
       <main className="flex-1 flex flex-col h-full bg-gray-50 relative overflow-hidden">
         {activeConversation ? (
           <div className="flex flex-col h-full">
-            {/* Chat Header */}
             <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm z-10">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -96,9 +150,16 @@ const ChatPage = () => {
               </button>
             </header>
 
-            {/* Chat Window */}
             <div className="flex-1 overflow-hidden">
-              <Chat />
+              <Chat
+                key={activeConversation.id}
+                oldMessages={activeConversation.oldMessages}
+                conversationId={
+                  activeConversation.id === "new"
+                    ? undefined
+                    : activeConversation.id
+                }
+              />
             </div>
           </div>
         ) : (
