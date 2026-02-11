@@ -15,8 +15,6 @@ export default function Chat({ oldMessages, conversationId }: ChatProps) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  console.log(oldMessages);
-
   const { messages, sendMessage, status, stop, error } = useChat({
     messages: oldMessages,
     transport: new DefaultChatTransport({

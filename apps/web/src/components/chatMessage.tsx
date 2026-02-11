@@ -8,7 +8,6 @@ interface ChatMessageProps {
 export function ChatMessage({ message }: ChatMessageProps) {
   const { role, parts } = message;
   const isUser = role === "user";
-  console.log(parts);
 
   return (
     <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
@@ -35,8 +34,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
           }
 
           // TOOLS
-          if (part.type.startsWith("tool-")) {
-            return <ToolCall key={part.toolCallId} toolInvocation={part} />;
+          {
+            /* if (part.type.startsWith("tool-")) { */
+          }
+          {
+            /*   return <ToolCall key={part.toolCallId} toolInvocation={part} />; */
+          }
+          {
+            /* } */
           }
 
           return null;

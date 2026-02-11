@@ -1,15 +1,18 @@
 import { Routes, Route } from "react-router-dom";
 import ChatPage from "./pages/ChatPage";
+import { ChatProvider } from "./lib/ChatContext";
 
 import "./App.css";
 
 function App() {
   return (
-    <Routes>
-      <Route>
-        <Route path="/" element={<ChatPage />} />
-      </Route>
-    </Routes>
+    <ChatProvider>
+      <Routes>
+        <Route>
+          <Route path="/" element={<ChatPage />} />
+        </Route>
+      </Routes>
+    </ChatProvider>
   );
 }
 

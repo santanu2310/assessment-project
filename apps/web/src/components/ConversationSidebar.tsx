@@ -5,7 +5,7 @@ export interface Conversation {
   id: string;
   title: string;
   avatar: string;
-  messages: UIMessage[];
+  oldMessages: UIMessage[];
   lastMessage: string;
   timestamp: string;
 }

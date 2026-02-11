@@ -1,98 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { MoreHorizontal, Loader2 } from "lucide-react";
 import Chat from "src/components/Chat";
-import {
-  ConversationSidebar,
-  type Conversation,
-} from "src/components/ConversationSidebar";
+import { ConversationSidebar } from "src/components/ConversationSidebar";
 import { EmptyState } from "src/components/EmptyState";
-import { client } from "src/lib/api";
-import type { UIMessage } from "ai";
+import { useChatStore } from "src/lib/ChatContext";
 
 const ChatPage = () => {
-  const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    conversations,
+    selectedId,
+    isLoading,
+    setSelectedId,
+    refreshConversations,
+    handleNewChat,
+  } = useChatStore();
 
-  const fetchConversations = async () => {
-    try {
-      const res = await client.api.chat.conversations.$get();
-      if (res.ok) {
-        const data = await res.json();
-        const getMessage = async (id: string) => {
-          const messages = await client.api.chat.conversations[":id"].$get({
-            param: {
-              id: id, // This must match the name in your route (:id)
-            },
-          });
-          const messageData = await messages.json();
-          const fetchedMessages: UIMessage = (messageData.messages || []).map(
-            (m: any) => ({
-              id: m.id,
-              role: m.role as "user" | "assistant",
-              parts: [{ type: "text", text: m.content }],
-            }),
-          );
-          return fetchedMessages;
-        };
-
-        // const transformed: Conversation[] = data.map((conv: any) => ({
-        //   id: conv.id,
-        //   title: `Session ${conv.id.slice(-4)}`,
-        //   avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`,
-        //   // messages: await getMessage(conv.id),
-        //   lastMessage:
-        //     conv._count?.messages > 0
-        //       ? `${conv._count.messages} messages`
-        //       : "New Conversation",
-        //   timestamp: new Date(conv.updatedAt).toLocaleTimeString([], {
-        //     hour: "2-digit",
-        //     minute: "2-digit",
-        //   }),
-        // }));
-        //
-        const transformed: Conversation[] = await Promise.all(
-          data.map(async (conv: any) => {
-            // 2. Fetch your messages here
-            const messages = await getMessage(conv.id);
-            console.log(messages);
-
-            return {
-              id: conv.id,
-              title: `Session ${conv.id.slice(-4)}`,
-              avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.id}`,
-
-              // 3. Now you can assign the resolved data
-              oldMessages: messages,
-
-              lastMessage:
-                conv._count?.messages > 0
-                  ? `${conv._count.messages} messages`
-                  : "New Conversation",
-              timestamp: new Date(conv.updatedAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            };
-          }),
-        );
-
-        setConversations(transformed);
-      }
-    } catch (error) {
-      console.error("Failed to fetch conversations:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Load conversations on mount
   useEffect(() => {
-    fetchConversations();
-  }, []);
-
-  const handleNewChat = () => {
-    setSelectedId("new"); // Temporarily set to "new" to show chat window
-  };
+    refreshConversations();
+  }, [refreshConversations]);
 
   const activeConversation =
     selectedId === "new"
@@ -108,7 +34,7 @@ const ChatPage = () => {
     <div className="flex h-screen w-full bg-[#0f172a] overflow-hidden">
       {/* Left Sidebar */}
       <aside className="w-[30%] min-w-[300px] max-w-[400px] h-full flex-shrink-0">
-        {isLoading ? (
+        {isLoading && conversations.length === 0 ? (
           <div className="h-full flex items-center justify-center bg-[#1e293b] border-r border-white/5">
             <Loader2 className="animate-spin text-purple-500" size={32} />
           </div>
@@ -152,8 +78,8 @@ const ChatPage = () => {
 
             <div className="flex-1 overflow-hidden">
               <Chat
-                key={activeConversation.id}
                 oldMessages={activeConversation.oldMessages}
+                key={activeConversation.id}
                 conversationId={
                   activeConversation.id === "new"
                     ? undefined
