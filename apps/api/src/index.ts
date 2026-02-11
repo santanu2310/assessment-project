@@ -4,7 +4,7 @@ import { logger } from "hono/logger";
 import agents from "./controllers/agents";
 import chat from "./controllers/chat";
 
-const app = new Hono().basePath("/");
+const app = new Hono().basePath("/api");
 
 app.use("*", cors());
 app.use("*", logger());

@@ -14,14 +14,14 @@ export const handleUserMessage = async (messages: ModelMessage[]) => {
   // Step 2: Route to the specific agent
   switch (agentType) {
     case "order":
-      return orderAgent(messages);
+      return orderAgent(messages).toUIMessageStreamResponse();
 
     case "billing":
-      return billingAgent(messages);
+      return billingAgent(messages).toUIMessageStreamResponse();
 
     case "support":
     case "general":
     default:
-      return supportAgent(messages);
+      return supportAgent(messages).toUIMessageStreamResponse();
   }
 };
