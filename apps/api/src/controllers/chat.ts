@@ -21,22 +21,20 @@ chat.post("/", async (c) => {
       const newConv = await ConversationRepository.createConversation();
       newConversationId = newConv.id;
     }
+    const id = conversationId ?? newConversationId!;
 
     const coreMessages = await convertToModelMessages(messages);
-
-    console.log(messages);
     const agentType = await classifyMessage(coreMessages);
 
     const onFinish = ({ messages: responseMessages }: { messages: any[] }) => {
-      saveMessages(conversationId || newConversationId, [
-        ...messages,
-        ...responseMessages,
-      ]);
+      saveMessages(id, [...messages, ...responseMessages]);
     };
 
     switch (agentType) {
       case "order":
-        return orderAgent(coreMessages).toUIMessageStreamResponse({ onFinish });
+        return orderAgent(coreMessages).toUIMessageStreamResponse({
+          onFinish,
+        });
 
       case "billing":
         return billingAgent(coreMessages).toUIMessageStreamResponse({
