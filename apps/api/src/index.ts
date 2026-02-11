@@ -18,4 +18,5 @@ app.notFound((c) => {
 const routes = app.route("/agents", agents).route("/chat", chat);
 
 export default app;
+
 export type AppType = typeof routes;

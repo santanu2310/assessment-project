@@ -20,25 +20,25 @@ model Conversation {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   messages  Message[]
-  // To handle "List user conversations" [cite: 41, 45]
-  userId    String?   
+  userId    String?
+  title     String?
 }
 
 model Message {
   id             String       @id @default(cuid())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
-  role           MessageRole  // 'user' or 'assistant'
-  content        String       @db.Text
-  
+
+  role    MessageRole // 'user' or 'assistant'
+  content String      @db.Text
+
   // To show AI reasoning/metadata as requested in bonus points [cite: 63]
-  reasoning      String?      @db.Text
-  
+  reasoning String? @db.Text
+
   // Track which agent handled the message (Support, Order, Billing) [cite: 20]
-  agentType      AgentType?   
-  
-  createdAt      DateTime     @default(now())
+  agentType AgentType?
+
+  createdAt DateTime @default(now())
 }
 
 enum MessageRole {
@@ -63,7 +63,7 @@ model Order {
   customerEmail String
   status        OrderStatus @default(PENDING)
   totalAmount   Decimal     @db.Decimal(10, 2)
-  items         String      // Simplified for mock data
+  items         String // Simplified for mock data
   trackingId    String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
