@@ -1,4 +1,4 @@
-import { type ModelMessage, stepCountIs, streamText } from "ai";
+import { type ModelMessage, streamText } from "ai";
 import { model } from "../../lib/ai";
 import { getInvoiceDetailsTool } from "../../tools/getInvoiceDetails";
 import { checkRefundStatusTool } from "../../tools/checkRefundStatus";
@@ -13,7 +13,6 @@ export const billingAgent = (messages: ModelMessage[]) => {
         Provide status updates on money movement via the check_refund_status tool.
         Manage subscription renewals and billing cycle inquiries.`,
     messages,
-    stopWhen: stepCountIs(10),
     tools: {
       getInvoiceDetails: getInvoiceDetailsTool,
       checkRefundStatus: checkRefundStatusTool,

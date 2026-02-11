@@ -30,6 +30,9 @@ chat.post("/", async (c) => {
       saveMessages(id, [...messages, ...responseMessages]);
     };
 
+    console.log(`Routing conversation to: [${agentType.toUpperCase()}]`);
+    console.log("coreMessages : ", coreMessages);
+
     switch (agentType) {
       case "order":
         return orderAgent(coreMessages).toUIMessageStreamResponse({

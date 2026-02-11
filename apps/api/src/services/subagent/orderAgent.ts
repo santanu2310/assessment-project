@@ -1,4 +1,4 @@
-import { type ModelMessage, stepCountIs, streamText } from "ai";
+import { type ModelMessage, streamText } from "ai";
 import { model } from "../../lib/ai";
 import { fetchOrderDetailsTool } from "../../tools/fetchOrderDetails";
 import { checkDeliveryStatusTool } from "../../tools/checkDeliveryStatus";
@@ -13,7 +13,6 @@ export const orderAgent = (messages: ModelMessage[]) => {
         Process order modifications or cancellations according to company policy.
         Explain shipping delays or logistics issues clearly.`,
     messages,
-    stopWhen: stepCountIs(10),
     tools: {
       fetchOrderDetails: fetchOrderDetailsTool,
       checkDeliveryStatus: checkDeliveryStatusTool,

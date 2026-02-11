@@ -23,6 +23,8 @@ async function execute({
       },
     });
 
+    console.log("order details by tool  :", order);
+
     if (!order) {
       return `No order found with order number: ${orderNumber}`;
     }
